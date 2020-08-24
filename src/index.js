@@ -31,11 +31,10 @@ function setup(webContents) {
     let credentials = config.get('credentials');
     // Retrieve saved senderId
     const savedSenderId = config.get('senderId');
-    if (started) {
+    if (started && credentials && credentials.fcm) {
       webContents.send(NOTIFICATION_SERVICE_STARTED, (credentials.fcm || {}).token);
       return;
     }
-    started = true;
     try {
       // Retrieve saved persistentId : avoid receiving all already received notifications on start
       const persistentIds = config.get('persistentIds') || [];
@@ -48,6 +47,7 @@ function setup(webContents) {
         config.set('senderId', senderId);
         // Notify the renderer process that the FCM token has changed
         webContents.send(TOKEN_UPDATED, credentials.fcm.token);
+        started = true;
       }
       // Listen for GCM/FCM notifications
       await listen(Object.assign({}, credentials, { persistentIds }), onNotification(webContents));
